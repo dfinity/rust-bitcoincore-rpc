@@ -891,7 +891,7 @@ pub trait RpcApi: Sized {
         if cfg!(feature = "dogecoin") {
             self.call("getnewaddress", &[])
         } else {
-            self.call(&[opt_into_json(label)?, opt_into_json(address_type)?])
+            self.call("getnewaddress", &[opt_into_json(label)?, opt_into_json(address_type)?])
         }
     }
 
