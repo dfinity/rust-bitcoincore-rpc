@@ -392,7 +392,7 @@ pub trait RpcApi: Sized {
         // The softfork fields are not backwards compatible:
         // - 0.18.x returns a "softforks" array and a "bip9_softforks" map.
         // - 0.19.x returns a "softforks" map.
-        Ok(if self.version()? < 190000 {
+        Ok(if self.version()? < 190000 || cfg!(feature = "dogecoin") {
             use crate::Error::UnexpectedStructure as err;
 
             // First, remove both incompatible softfork fields.
@@ -888,7 +888,11 @@ pub trait RpcApi: Sized {
         label: Option<&str>,
         address_type: Option<json::AddressType>,
     ) -> Result<Address<NetworkUnchecked>> {
-        self.call("getnewaddress", &[opt_into_json(label)?, opt_into_json(address_type)?])
+        if cfg!(feature = "dogecoin") {
+            self.call("getnewaddress", &[])
+        } else {
+            self.call(&[opt_into_json(label)?, opt_into_json(address_type)?])
+        }
     }
 
     /// Generate new address for receiving change
