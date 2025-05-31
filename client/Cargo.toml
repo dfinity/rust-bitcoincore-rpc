@@ -20,11 +20,11 @@ path = "src/lib.rs"
 
 [features]
 default = ["rand"]
-rand = ["bitcoincore-rpc-json/rand"]
-dogecoin = []
+rand = [ "bitcoincore-rpc-json/rand" ]
+dogecoin = [ "bitcoincore-rpc-json/dogecoin" ]
 
 [dependencies]
-bitcoincore-rpc-json = { version = "0.19.0", path = "../json" }
+bitcoincore-rpc-json = { version = "0.19.0", path = "../json", default-features = false }
 
 log = "0.4.5"
 jsonrpc = { version = "0.18.0", features = ["minreq_http"] }

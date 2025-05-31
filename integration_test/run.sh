@@ -35,6 +35,9 @@ bitcoind -regtest $BLOCKFILTERARG $FALLBACKFEEARG \
     -server=1 \
     -txindex=1 \
     -printtoconsole=0 \
+    -blockfilterindex=1 \
+    -fallbackfee=0.000001 \
+    -maxtxfee=0.001 \
     -zmqpubrawblock=tcp://0.0.0.0:28332 \
     -zmqpubrawtx=tcp://0.0.0.0:28333 &
 PID2=$!

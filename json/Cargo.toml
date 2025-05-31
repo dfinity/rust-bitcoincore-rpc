@@ -13,18 +13,19 @@ description = "JSON-enabled type structs for bitcoincore-rpc crate."
 keywords = [ "crypto", "bitcoin", "bitcoin-core", "rpc" ]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.56.1"
 
 [lib]
 name = "bitcoincore_rpc_json"
 path = "src/lib.rs"
 
 [features]
-default = ["rand"]
+default = [ "rand" ]
 rand = ["bitcoin/rand-std"]
+dogecoin = [ "dep:dogecoin" ]
 
 [dependencies]
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 
 bitcoin = { version = "0.32.0", features = ["serde"] }
+dogecoin = { path = "/opt/doge/ldclabs/ck-doge/src/dogecoin", optional = true }

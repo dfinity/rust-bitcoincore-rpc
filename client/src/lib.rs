@@ -25,7 +25,6 @@ extern crate serde;
 pub extern crate jsonrpc;
 
 pub extern crate bitcoincore_rpc_json;
-pub use crate::json::bitcoin;
 pub use bitcoincore_rpc_json as json;
 
 mod client;

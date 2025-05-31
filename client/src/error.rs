@@ -10,9 +10,9 @@
 
 use std::{error, fmt, io};
 
-use crate::bitcoin;
-use crate::bitcoin::hashes::hex;
-use crate::bitcoin::secp256k1;
+use crate::json::import;
+use import::hashes::hex;
+use import::secp256k1;
 use jsonrpc;
 use serde_json;
 
@@ -22,10 +22,11 @@ pub enum Error {
     JsonRpc(jsonrpc::error::Error),
     Hex(hex::HexToBytesError),
     Json(serde_json::error::Error),
-    BitcoinSerialization(bitcoin::consensus::encode::FromHexError),
+    BitcoinSerialization(import::consensus::encode::FromHexError),
     Secp256k1(secp256k1::Error),
     Io(io::Error),
-    InvalidAmount(bitcoin::amount::ParseAmountError),
+    InvalidAddress(import::address::AddressParseError),
+    InvalidAmount(import::amount::ParseAmountError),
     InvalidCookieFile,
     /// The JSON result had an unexpected structure.
     UnexpectedStructure,
@@ -51,8 +52,8 @@ impl From<serde_json::error::Error> for Error {
     }
 }
 
-impl From<bitcoin::consensus::encode::FromHexError> for Error {
-    fn from(e: bitcoin::consensus::encode::FromHexError) -> Error {
+impl From<import::consensus::encode::FromHexError> for Error {
+    fn from(e: import::consensus::encode::FromHexError) -> Error {
         Error::BitcoinSerialization(e)
     }
 }
@@ -69,9 +70,15 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<bitcoin::amount::ParseAmountError> for Error {
-    fn from(e: bitcoin::amount::ParseAmountError) -> Error {
+impl From<import::amount::ParseAmountError> for Error {
+    fn from(e: import::amount::ParseAmountError) -> Error {
         Error::InvalidAmount(e)
+    }
+}
+
+impl From<import::address::AddressParseError> for Error {
+    fn from(e: import::address::AddressParseError) -> Error {
+        Error::InvalidAddress(e)
     }
 }
 
@@ -84,6 +91,7 @@ impl fmt::Display for Error {
             Error::BitcoinSerialization(ref e) => write!(f, "Bitcoin serialization error: {}", e),
             Error::Secp256k1(ref e) => write!(f, "secp256k1 error: {}", e),
             Error::Io(ref e) => write!(f, "I/O error: {}", e),
+            Error::InvalidAddress(ref e) => write!(f, "invalid address: {}", e),
             Error::InvalidAmount(ref e) => write!(f, "invalid amount: {}", e),
             Error::InvalidCookieFile => write!(f, "invalid cookie file"),
             Error::UnexpectedStructure => write!(f, "the JSON result had an unexpected structure"),
