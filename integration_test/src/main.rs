@@ -371,7 +371,7 @@ fn test_get_block_header_get_block_header_info(cl: &Client) {
     let header = cl.get_block_header(&tip).unwrap();
     let info = cl.get_block_header_info(&tip).unwrap();
     assert_eq!(header.block_hash(), info.hash);
-    assert_eq!(header.version, info.version);
+    assert_eq!(header.version.to_consensus() as u32, info.version);
     assert_eq!(header.merkle_root, info.merkle_root);
     assert_eq!(info.confirmations, 1);
     assert_eq!(info.next_block_hash, None);
