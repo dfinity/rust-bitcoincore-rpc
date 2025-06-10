@@ -19,16 +19,14 @@
 #[macro_use] // `macro_use` is needed for v1.24.0 compilation.
 use std::collections::HashMap;
 type Version = u32;
+use crate::import::{
+    address::{Address, AddressUnchecked},
+    BlockHash, Network, Script, ScriptBuf, Transaction, TxMerkleNode, Txid,
+};
 use bitcoin::consensus::encode;
 use bitcoin::hashes::hex::FromHex;
 use bitcoin::hashes::sha256;
 use bitcoin::{bip158, bip32, Amount, PrivateKey, PublicKey, SignedAmount};
-use dogecoin::{
-    block::{BlockHash, TxMerkleNode},
-    network::Network,
-    script::{Address, Script, ScriptBuf},
-    transaction::{Transaction, Txid},
-};
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -90,7 +88,7 @@ pub struct GetNetworkInfoResult {
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddMultiSigAddressResult {
-    pub address: Address,
+    pub address: AddressUnchecked,
     pub redeem_script: ScriptBuf,
 }
 
@@ -524,10 +522,10 @@ pub struct GetRawTransactionResultVoutScriptPubKey {
     pub type_: Option<ScriptPubkeyType>,
     // Deprecated in Bitcoin Core 22
     #[serde(default)]
-    pub addresses: Vec<Address>,
+    pub addresses: Vec<AddressUnchecked>,
     // Added in Bitcoin Core 22
     #[serde(default)]
-    pub address: Option<Address>,
+    pub address: Option<AddressUnchecked>,
 }
 
 impl GetRawTransactionResultVoutScriptPubKey {
@@ -622,7 +620,7 @@ pub enum GetTransactionResultDetailCategory {
 
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct GetTransactionResultDetail {
-    pub address: Option<Address>,
+    pub address: Option<AddressUnchecked>,
     pub category: GetTransactionResultDetailCategory,
     #[serde(with = "bitcoin::amount::serde::as_btc")]
     pub amount: SignedAmount,
@@ -729,7 +727,7 @@ pub struct ListUnspentQueryOptions {
 pub struct ListUnspentResultEntry {
     pub txid: Txid,
     pub vout: u32,
-    pub address: Option<Address>,
+    pub address: Option<AddressUnchecked>,
     pub label: Option<String>,
     pub redeem_script: Option<ScriptBuf>,
     pub witness_script: Option<ScriptBuf>,
@@ -748,7 +746,7 @@ pub struct ListUnspentResultEntry {
 pub struct ListReceivedByAddressResult {
     #[serde(default, rename = "involvesWatchonly")]
     pub involved_watch_only: bool,
-    pub address: Address,
+    pub address: AddressUnchecked,
     #[serde(with = "bitcoin::amount::serde::as_btc")]
     pub amount: Amount,
     pub confirmations: u32,
@@ -870,7 +868,7 @@ pub enum ScriptPubkeyType {
 
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct GetAddressInfoResultEmbedded {
-    pub address: Address,
+    pub address: AddressUnchecked,
     #[serde(rename = "scriptPubKey")]
     pub script_pub_key: ScriptBuf,
     #[serde(rename = "is_script")]
@@ -918,7 +916,7 @@ pub enum GetAddressInfoResultLabel {
 
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct GetAddressInfoResult {
-    pub address: Address,
+    pub address: AddressUnchecked,
     #[serde(rename = "scriptPubKey")]
     pub script_pub_key: ScriptBuf,
     #[serde(rename = "ismine")]
@@ -1680,7 +1678,7 @@ pub struct WalletCreateFundedPsbtOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub add_inputs: Option<bool>,
     #[serde(rename = "changeAddress", skip_serializing_if = "Option::is_none")]
-    pub change_address: Option<Address>,
+    pub change_address: Option<AddressUnchecked>,
     #[serde(rename = "changePosition", skip_serializing_if = "Option::is_none")]
     pub change_position: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]

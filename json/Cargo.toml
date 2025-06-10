@@ -21,11 +21,10 @@ path = "src/lib.rs"
 [features]
 default = [ "rand" ]
 rand = ["bitcoin/rand-std"]
-dogecoin = [ "dep:dogecoin" ]
+dogecoin = []
 
 [dependencies]
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 
-bitcoin = { version = "0.32.0", features = ["serde"] }
-dogecoin = { git = "https://github.com/ninegua/ck-doge", rev = "f390e5ca6ee244d2b54373aa437828f3c92c00e7", optional = true }
+bitcoin = { git = "https://github.com/dfinity/rust-dogecoin", rev = "2e75393ea4eb45be8cda24d4400dda9900eb9e2e", features = [ "serde" ]}

@@ -29,40 +29,28 @@ pub mod import {
 
     #[cfg(feature = "dogecoin")]
     pub mod address {
-        pub use dogecoin::script::{Address, AddressType};
-        pub type AddressUnchecked = dogecoin::script::Address;
-        pub use dogecoin::script::AddressParseError;
+        pub use bitcoin::address::AddressType;
+        pub type Address = bitcoin::dogecoin::address::Address<bitcoin::address::NetworkChecked>;
+        pub type AddressUnchecked =
+            bitcoin::dogecoin::address::Address<bitcoin::address::NetworkUnchecked>;
+        pub type AddressParseError = bitcoin::dogecoin::address::ParseError;
     }
 
-    #[cfg(not(feature = "dogecoin"))]
     pub mod transaction {
         pub use bitcoin::transaction::Version;
     }
 
-    #[cfg(feature = "dogecoin")]
-    pub mod transaction {
-        pub struct Version;
-        impl Version {
-            pub const ONE: u32 = 1;
-        }
-    }
-
     #[cfg(not(feature = "dogecoin"))]
-    pub use bitcoin::{
-        block::Header as BlockHeader, Block, BlockHash, Network, OutPoint, Transaction, TxIn,
-        TxOut, Txid, Witness,
-    };
+    pub use bitcoin::{Block, Network};
 
     #[cfg(feature = "dogecoin")]
-    pub use dogecoin::{
-        block::{Block, BlockHash, BlockHeader},
-        network::Network,
-        transaction::{OutPoint, Transaction, TxIn, TxOut, Txid, Witness},
-    };
+    pub use bitcoin::dogecoin::{Block, Network};
 
     pub use bitcoin::{
-        absolute::LockTime, amount, consensus, hashes, hex, secp256k1, sighash, Amount,
-        CompressedPublicKey, PrivateKey, PublicKey, Script, ScriptBuf, Sequence, SignedAmount,
+        absolute::LockTime, amount, block::Header as BlockHeader, consensus, hashes, hex,
+        secp256k1, sighash, Amount, BlockHash, CompressedPublicKey, OutPoint, PrivateKey,
+        PublicKey, Script, ScriptBuf, Sequence, SignedAmount, Transaction, TxIn, TxMerkleNode,
+        TxOut, Txid, Witness,
     };
 }
 
