@@ -27,4 +27,4 @@ dogecoin = []
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 
-bitcoin = { git = "https://github.com/dfinity/rust-dogecoin", rev = "7de28d98a8fc757ea63a362288862296b67c112c", features = [ "serde" ]}
+bitcoin = { git = "https://github.com/dfinity/rust-dogecoin", rev = "ebaa9f09e862f5093b1ccf04cfc1a8f4ee0e2ab1", features = [ "serde" ]}
