@@ -10,7 +10,7 @@ lazy_static = "1.4.0"
 log = "0.4"
 
 [features]
-default = ["dogecoin"]
+default = []
 dogecoin = [ "bitcoincore-rpc/dogecoin" ]
 
 

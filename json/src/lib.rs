@@ -49,8 +49,8 @@ pub mod import {
     pub use bitcoin::{
         absolute::LockTime, amount, block::Header as BlockHeader, consensus, hashes, hex,
         secp256k1, sighash, Amount, BlockHash, CompressedPublicKey, OutPoint, PrivateKey,
-        PublicKey, Script, ScriptBuf, Sequence, SignedAmount, Transaction, TxIn, TxMerkleNode,
-        TxOut, Txid, Witness,
+        PubkeyHash, PublicKey, Script, ScriptBuf, Sequence, SignedAmount, Transaction, TxIn,
+        TxMerkleNode, TxOut, Txid, Witness,
     };
 }
 

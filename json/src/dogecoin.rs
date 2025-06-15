@@ -1014,7 +1014,7 @@ pub enum ImportMultiRequestScriptPubkey<'a> {
 
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct GetMempoolInfoResult {
-    /// True if the mempool is fully loaded
+    /// True if the mempool is fully loaded, not applicable to 
     pub loaded: Option<bool>,
     /// Current tx count
     pub size: usize,
@@ -1031,9 +1031,6 @@ pub struct GetMempoolInfoResult {
     /// Minimum fee rate in BTC/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee
     #[serde(rename = "mempoolminfee", with = "bitcoin::amount::serde::as_btc")]
     pub mempool_min_fee: Amount,
-    /// Current minimum relay fee for transactions
-    #[serde(rename = "minrelaytxfee", with = "bitcoin::amount::serde::as_btc")]
-    pub min_relay_tx_fee: Amount,
     /// Minimum fee rate increment for mempool limiting or replacement in BTC/kvB
     #[serde(rename = "incrementalrelayfee", default, with = "bitcoin::amount::serde::as_btc::opt")]
     pub incremental_relay_fee: Option<Amount>,
@@ -1284,9 +1281,6 @@ pub struct GetPeerInfoResult {
     /// The IP address and port of the peer
     // TODO: use a type for addr
     pub addr: String,
-    /// Bind address of the connection to the peer
-    // TODO: use a type for addrbind
-    pub addrbind: String,
     /// Local address as reported by the peer
     // TODO: use a type for addrlocal
     pub addrlocal: Option<String>,
@@ -1525,9 +1519,6 @@ pub struct GetBlockTemplateResult {
     /// Block size limit
     #[serde(rename = "sizelimit")]
     pub size_limit: u32,
-    /// Block weight limit
-    #[serde(rename = "weightlimit")]
-    pub weight_limit: u32,
     /// Block header version
     pub version: u32,
     /// Block rules that are to be enforced
@@ -1719,7 +1710,6 @@ pub struct DecodeRawTransactionResult {
     pub hash: bitcoin::Wtxid,
     pub size: u32,
     pub vsize: u32,
-    pub weight: u32,
     pub version: u32,
     pub locktime: u32,
     pub vin: Vec<GetRawTransactionResultVin>,
@@ -1837,8 +1827,6 @@ pub struct FundRawTransactionOptions {
     pub fee_rate: Option<Amount>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subtract_fee_from_outputs: Option<Vec<u32>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub replaceable: Option<bool>,
     #[serde(rename = "conf_target", skip_serializing_if = "Option::is_none")]
     pub conf_target: Option<u32>,
     #[serde(rename = "estimate_mode", skip_serializing_if = "Option::is_none")]
@@ -1926,8 +1914,6 @@ pub struct GetTxOutSetInfoResult {
     /// The number of unspent transaction outputs
     #[serde(rename = "txouts")]
     pub tx_outs: u64,
-    /// A meaningless metric for UTXO set size
-    pub bogosize: u64,
     /// The serialized hash (only present if 'hash_serialized_2' hash_type is chosen)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hash_serialized_2: Option<sha256::Hash>,
