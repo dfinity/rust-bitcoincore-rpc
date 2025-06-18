@@ -148,10 +148,8 @@ fn main() {
     test_get_blockchain_info(&cl);
     test_get_new_address(&cl);
     test_get_raw_change_address(&cl);
-    /* got error: Only legacy wallets are supported by this command
     #[cfg(not(feature = "dogecoin"))]
     test_dump_private_key(&cl);
-    */
     test_generate(&cl);
     test_get_balance_generate_to_address(&cl);
     #[cfg(not(feature = "dogecoin"))]
@@ -210,10 +208,14 @@ fn main() {
     test_list_received_by_address(&cl);
     #[cfg(not(feature = "dogecoin"))]
     test_scantxoutset(&cl);
-    // test_import_public_key(&cl);
-    // test_import_priv_key(&cl);
-    // test_import_address(&cl);
-    // test_import_address_script(&cl);
+    #[cfg(not(feature = "dogecoin"))]
+    test_import_public_key(&cl);
+    #[cfg(not(feature = "dogecoin"))]
+    test_import_priv_key(&cl);
+    #[cfg(not(feature = "dogecoin"))]
+    test_import_address(&cl);
+    #[cfg(not(feature = "dogecoin"))]
+    test_import_address_script(&cl);
     test_estimate_smart_fee(&cl);
     test_ping(&cl);
     test_get_peer_info(&cl);
@@ -393,7 +395,7 @@ fn test_get_block_header_get_block_header_info(cl: &Client) {
     let header = cl.get_block_header(&tip).unwrap();
     let info = cl.get_block_header_info(&tip).unwrap();
     assert_eq!(header.block_hash(), info.hash);
-    assert_eq!(header.version.to_consensus() as u32, info.version);
+    assert_eq!(header.version, info.version);
     assert_eq!(header.merkle_root, info.merkle_root);
     assert_eq!(info.confirmations, 1);
     assert_eq!(info.next_block_hash, None);
@@ -499,9 +501,12 @@ fn test_get_received_by_address(cl: &Client) {
     let _ = cl.send_to_address(&addr, btc(1), None, None, None, None, None, None).unwrap();
     assert_eq!(cl.get_received_by_address(&addr, Some(0)).unwrap(), btc(1));
     assert_eq!(cl.get_received_by_address(&addr, Some(1)).unwrap(), btc(0));
-    let _ = cl.generate_to_address(7, &cl.get_new_address(None, None).unwrap()).unwrap();
+    let _ = cl.generate_to_address(7, &addr).unwrap();
+    let _ = cl.generate_to_address(100, &cl.get_new_address(None, None).unwrap()).unwrap();
     assert_eq!(cl.get_received_by_address(&addr, Some(6)).unwrap(), btc(1));
     assert_eq!(cl.get_received_by_address(&addr, None).unwrap(), btc(1));
+    println!("test_get_received_by_addrss {}", addr);
+    panic!("err");
 }
 
 fn test_list_unspent(cl: &Client) {
@@ -654,8 +659,8 @@ fn test_get_block_filter(cl: &Client) {
 #[cfg(not(feature = "dogecoin"))]
 fn test_sign_raw_transaction_with_send_raw_transaction(cl: &Client) {
     use import::{
-        sighash, transaction::Version, CompressedPublicKey, LockTime, ScriptBuf, Sequence,
-        Transaction, TxIn, TxOut, Witness,
+        sighash, transaction::Version, CompressedPublicKey, LockTime, PrivateKey, ScriptBuf,
+        Sequence, Transaction, TxIn, TxOut, Witness,
     };
     let sk = PrivateKey {
         network: Network::Regtest.into(),
@@ -1107,7 +1112,7 @@ fn test_list_received_by_address(cl: &Client) {
 #[cfg(not(feature = "dogecoin"))]
 // Got error: "Only legacy wallets are supported by this command"
 fn test_import_public_key(cl: &Client) {
-    let sk = bitcoin::PrivateKey {
+    let sk = import::PrivateKey {
         network: Network::Regtest.into(),
         inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
         compressed: true,
@@ -1120,7 +1125,7 @@ fn test_import_public_key(cl: &Client) {
 #[cfg(not(feature = "dogecoin"))]
 // Got error: "Only legacy wallets are supported by this command"
 fn test_import_priv_key(cl: &Client) {
-    let sk = PrivateKey {
+    let sk = import::PrivateKey {
         network: Network::Regtest.into(),
         inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
         compressed: true,
@@ -1133,7 +1138,7 @@ fn test_import_priv_key(cl: &Client) {
 #[cfg(not(feature = "dogecoin"))]
 // Got error: "Only legacy wallets are supported by this command"
 fn test_import_address(cl: &Client) {
-    let sk = PrivateKey {
+    let sk = import::PrivateKey {
         network: Network::Regtest.into(),
         inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
         compressed: true,
@@ -1147,7 +1152,7 @@ fn test_import_address(cl: &Client) {
 #[cfg(not(feature = "dogecoin"))]
 // Got error: "Only legacy wallets are supported by this command"
 fn test_import_address_script(cl: &Client) {
-    let sk = PrivateKey {
+    let sk = import::PrivateKey {
         network: Network::Regtest.into(),
         inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
         compressed: true,

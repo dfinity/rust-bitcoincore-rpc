@@ -18,10 +18,9 @@
 #[allow(unused)]
 #[macro_use] // `macro_use` is needed for v1.24.0 compilation.
 use std::collections::HashMap;
-type Version = u32;
 use crate::import::{
     address::{Address, AddressUnchecked},
-    BlockHash, Network, Script, ScriptBuf, Transaction, TxMerkleNode, Txid,
+    BlockHash, Network, Script, ScriptBuf, Transaction, TxMerkleNode, Txid, Version,
 };
 use bitcoin::consensus::encode;
 use bitcoin::hashes::hex::FromHex;
@@ -1014,7 +1013,7 @@ pub enum ImportMultiRequestScriptPubkey<'a> {
 
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct GetMempoolInfoResult {
-    /// True if the mempool is fully loaded, not applicable to 
+    /// True if the mempool is fully loaded, not applicable to
     pub loaded: Option<bool>,
     /// Current tx count
     pub size: usize,

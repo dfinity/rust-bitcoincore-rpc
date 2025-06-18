@@ -50,7 +50,7 @@ pub mod import {
         absolute::LockTime, amount, block::Header as BlockHeader, consensus, hashes, hex,
         secp256k1, sighash, Amount, BlockHash, CompressedPublicKey, OutPoint, PrivateKey,
         PubkeyHash, PublicKey, Script, ScriptBuf, Sequence, SignedAmount, Transaction, TxIn,
-        TxMerkleNode, TxOut, Txid, Witness,
+        TxMerkleNode, TxOut, Txid, Witness, block::Version
     };
 }
 
