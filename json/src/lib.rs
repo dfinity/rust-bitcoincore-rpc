@@ -3,31 +3,14 @@
 //! This is a client library for the Bitcoin Core JSON-RPC API.
 //!
 
-#![crate_name = "bitcoincore_rpc_json"]
+#![crate_name = "dogecoincore_rpc_json"]
 #![crate_type = "rlib"]
 
-#[cfg(not(feature = "dogecoin"))]
-mod bitcoin;
-
-#[cfg(feature = "dogecoin")]
 mod dogecoin;
 
-#[cfg(not(feature = "dogecoin"))]
-pub use crate::bitcoin::*;
-
-#[cfg(feature = "dogecoin")]
 pub use crate::dogecoin::*;
 
 pub mod import {
-    #[cfg(not(feature = "dogecoin"))]
-    pub mod address {
-        pub use bitcoin::address::AddressType;
-        pub type Address = bitcoin::address::Address<bitcoin::address::NetworkChecked>;
-        pub type AddressUnchecked = bitcoin::address::Address<bitcoin::address::NetworkUnchecked>;
-        pub type AddressParseError = bitcoin::address::ParseError;
-    }
-
-    #[cfg(feature = "dogecoin")]
     pub mod address {
         pub use bitcoin::address::AddressType;
         pub type Address = bitcoin::dogecoin::address::Address<bitcoin::address::NetworkChecked>;
@@ -40,17 +23,13 @@ pub mod import {
         pub use bitcoin::transaction::Version;
     }
 
-    #[cfg(not(feature = "dogecoin"))]
-    pub use bitcoin::{Block, Network};
-
-    #[cfg(feature = "dogecoin")]
     pub use bitcoin::dogecoin::{Block, Network};
 
     pub use bitcoin::{
-        absolute::LockTime, amount, block::Header as BlockHeader, consensus, hashes, hex,
-        secp256k1, sighash, Amount, BlockHash, CompressedPublicKey, OutPoint, PrivateKey,
-        PubkeyHash, PublicKey, Script, ScriptBuf, Sequence, SignedAmount, Transaction, TxIn,
-        TxMerkleNode, TxOut, Txid, Witness, block::Version
+        absolute::LockTime, amount, block::Header as BlockHeader, block::Version, consensus,
+        hashes, hex, secp256k1, sighash, Amount, BlockHash, CompressedPublicKey, OutPoint,
+        PrivateKey, PubkeyHash, PublicKey, Script, ScriptBuf, Sequence, SignedAmount, Transaction,
+        TxIn, TxMerkleNode, TxOut, Txid, Witness,
     };
 }
 

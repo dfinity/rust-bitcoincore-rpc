@@ -5,12 +5,6 @@ authors = ["Steven Roose <steven@stevenroose.org>"]
 edition = "2018"
 
 [dependencies]
-bitcoincore-rpc = { path = "../client", features = ["rand"] }
+dogecoincore-rpc = { path = "../client", features = ["rand"] }
 lazy_static = "1.4.0"
 log = "0.4"
-
-[features]
-default = []
-dogecoin = [ "bitcoincore-rpc/dogecoin" ]
-
-

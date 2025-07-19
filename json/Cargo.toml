@@ -1,5 +1,5 @@
 [package]
-name = "bitcoincore-rpc-json"
+name = "dogecoincore-rpc-json"
 version = "0.19.0"
 authors = [
     "Steven Roose <steven@stevenroose.org>",
@@ -7,24 +7,23 @@ authors = [
     "Dawid Ciężarkiewicz <dpc@dpc.pw>"
 ]
 license = "CC0-1.0"
-homepage = "https://github.com/rust-bitcoin/rust-bitcoincore-rpc/"
-repository = "https://github.com/rust-bitcoin/rust-bitcoincore-rpc/"
-description = "JSON-enabled type structs for bitcoincore-rpc crate."
-keywords = [ "crypto", "bitcoin", "bitcoin-core", "rpc" ]
+homepage = "https://github.com/dfinity/rust-dogecoincore-rpc/"
+repository = "https://github.com/dfinity/rust-dogecoincore-rpc/"
+description = "JSON-enabled type structs for dogecoincore-rpc crate."
+keywords = [ "crypto", "dogecoin", "dogecoin-core", "rpc" ]
 readme = "README.md"
 edition = "2021"
 
 [lib]
-name = "bitcoincore_rpc_json"
+name = "dogecoincore_rpc_json"
 path = "src/lib.rs"
 
 [features]
 default = [ "rand" ]
 rand = ["bitcoin/rand-std"]
-dogecoin = []
 
 [dependencies]
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 
-bitcoin = { git = "https://github.com/dfinity/rust-dogecoin", rev = "f1f900da0b193c43fd16f4598e614ed3eafbfd8f", features = [ "serde" ]}
+bitcoin = { git = "https://github.com/dfinity/rust-dogecoin", rev = "b5125f00d9d1e6c553d83ee54ee9d6203da8e0db", features = [ "serde" ]}

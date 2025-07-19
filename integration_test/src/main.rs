@@ -15,13 +15,13 @@ extern crate lazy_static;
 
 use std::collections::HashMap;
 
-use bitcoincore_rpc::json;
-use bitcoincore_rpc::json::import;
-use bitcoincore_rpc::jsonrpc::error::Error as JsonRpcError;
-use bitcoincore_rpc::{Auth, Client, Error, RpcApi};
+use dogecoincore_rpc::json;
+use dogecoincore_rpc::json::import;
+use dogecoincore_rpc::jsonrpc::error::Error as JsonRpcError;
+use dogecoincore_rpc::{Auth, Client, Error, RpcApi};
 
 use crate::json::BlockStatsFields as BsFields;
-use bitcoincore_rpc::bitcoincore_rpc_json::{GetBlockTemplateModes, GetBlockTemplateRules};
+use dogecoincore_rpc::json::{GetBlockTemplateModes, GetBlockTemplateRules};
 use import::consensus::encode::{deserialize, serialize_hex};
 use import::hashes::hex::FromHex;
 use import::hashes::Hash;
@@ -55,17 +55,6 @@ impl log::Log for StdLogger {
 }
 
 static LOGGER: StdLogger = StdLogger;
-
-#[cfg(not(feature = "dogecoin"))]
-/// Assert that the call returns a "deprecated" error.
-macro_rules! assert_deprecated {
-    ($call:expr) => {
-        match $call.unwrap_err() {
-            Error::JsonRpc(JsonRpcError::Rpc(ref e)) if e.code == -32 => {}
-            e => panic!("expected deprecated error for {}, got: {}", stringify!($call), e),
-        }
-    };
-}
 
 #[allow(unused)]
 /// Assert that the call returns a "method not found" error.
@@ -104,16 +93,11 @@ fn sbtc<F: Into<f64>>(btc: F) -> SignedAmount {
     SignedAmount::from_btc(btc.into()).unwrap()
 }
 
-#[cfg(not(feature = "dogecoin"))]
-fn get_testdir() -> String {
-    return std::env::var("TESTDIR").expect("TESTDIR must be set");
-}
-
 fn get_rpc_url() -> String {
     return std::env::var("RPC_URL").expect("RPC_URL must be set");
 }
 
-fn get_auth() -> bitcoincore_rpc::Auth {
+fn get_auth() -> dogecoincore_rpc::Auth {
     if let Ok(cookie) = std::env::var("RPC_COOKIE") {
         return Auth::CookieFile(cookie.into());
     } else if let Ok(user) = std::env::var("RPC_USER") {
@@ -125,9 +109,6 @@ fn get_auth() -> bitcoincore_rpc::Auth {
 
 #[allow(unused)]
 fn new_wallet_client(wallet_name: &str) -> Client {
-    #[cfg(not(feature = "dogecoin"))]
-    let url = format!("{}{}{}", get_rpc_url(), "/wallet/", wallet_name);
-    #[cfg(feature = "dogecoin")]
     let url = get_rpc_url();
     Client::new(Network::Regtest, &url, get_auth()).unwrap()
 }
@@ -141,19 +122,12 @@ fn main() {
     unsafe { VERSION = cl.version().unwrap() };
     println!("Version: {}", version());
 
-    #[cfg(not(feature = "dogecoin"))]
-    cl.create_wallet("testwallet", None, None, None, None).unwrap();
-
     test_get_mining_info(&cl);
     test_get_blockchain_info(&cl);
     test_get_new_address(&cl);
     test_get_raw_change_address(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_dump_private_key(&cl);
     test_generate(&cl);
     test_get_balance_generate_to_address(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_balances_generate_to_address(&cl);
     test_get_best_block_hash(&cl);
     test_get_block_count(&cl);
     test_get_block_hash(&cl);
@@ -161,10 +135,6 @@ fn main() {
     test_get_block_header_get_block_header_info(&cl);
     test_get_block_stats(&cl);
     test_get_block_stats_fields(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_address_info(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_set_label(&cl);
     test_send_to_address(&cl);
     test_get_received_by_address(&cl);
     test_list_unspent(&cl);
@@ -180,71 +150,19 @@ fn main() {
     test_get_tx_out_proof(&cl);
     test_get_mempool_entry(&cl);
     test_lock_unspent_unlock_unspent(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_block_filter(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_sign_raw_transaction_with_send_raw_transaction(&cl);
     test_invalidate_block_reconsider_block(&cl);
     test_key_pool_refill(&cl);
     test_create_raw_transaction(&cl);
     test_decode_raw_transaction(&cl);
     test_fund_raw_transaction(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_test_mempool_accept(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_wallet_create_funded_psbt(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_wallet_process_psbt(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_join_psbt(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_combine_psbt(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_combine_raw_transaction(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_create_psbt(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_finalize_psbt(&cl);
     test_list_received_by_address(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_scantxoutset(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_import_public_key(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_import_priv_key(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_import_address(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_import_address_script(&cl);
     test_estimate_smart_fee(&cl);
     test_ping(&cl);
     test_get_peer_info(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_rescan_blockchain(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_create_wallet(&cl);
     test_get_tx_out_set_info(&cl);
     test_get_chain_tips(&cl);
     test_get_net_totals(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_network_hash_ps(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_uptime(&cl);
     test_getblocktemplate(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_unloadwallet(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_loadwallet(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_backupwallet(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_wait_for_new_block(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_wait_for_block(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_descriptor_info(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_derive_addresses(&cl);
     test_get_mempool_info(&cl);
     // test_add_multisig_address(&cl);
     //TODO import_multi(
@@ -253,16 +171,8 @@ fn main() {
     //TODO get_by_id<T: queryable::Queryable<Self>>(
     test_add_node(&cl);
     test_get_added_node_info(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_node_addresses(&cl);
     test_disconnect_node(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_add_ban(&cl);
     test_set_network_active(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_index_info(&cl);
-    #[cfg(not(feature = "dogecoin"))]
-    test_get_zmq_notifications(&cl);
     test_stop(cl);
 }
 
@@ -285,58 +195,13 @@ fn test_get_new_address(cl: &Client) {
 
     let addr = cl.get_new_address(None, Some(json::AddressType::Legacy)).unwrap();
     assert_eq!(addr.address_type(), Some(AddressType::P2pkh));
-
-    #[cfg(not(feature = "dogecoin"))]
-    {
-        let addr = cl.get_new_address(None, Some(json::AddressType::Bech32)).unwrap();
-        assert_eq!(addr.address_type(), Some(AddressType::P2wpkh));
-
-        let addr = cl.get_new_address(None, Some(json::AddressType::P2shSegwit)).unwrap();
-        assert_eq!(addr.address_type(), Some(AddressType::P2sh));
-    }
 }
 
 fn test_get_raw_change_address(cl: &Client) {
     let addr = cl.get_raw_change_address(Some(json::AddressType::Legacy)).unwrap();
     assert_eq!(addr.address_type(), Some(AddressType::P2pkh));
-
-    #[cfg(not(feature = "dogecoin"))]
-    {
-        let addr = cl.get_raw_change_address(Some(json::AddressType::Bech32)).unwrap();
-        assert_eq!(addr.address_type(), Some(AddressType::P2wpkh));
-
-        let addr = cl.get_raw_change_address(Some(json::AddressType::P2shSegwit)).unwrap();
-        assert_eq!(addr.address_type(), Some(AddressType::P2sh));
-    }
 }
 
-#[cfg(not(feature = "dogecoin"))]
-fn test_dump_private_key(cl: &Client) {
-    let addr = cl.get_new_address(None, Some(json::AddressType::Bech32)).unwrap();
-    let sk = cl.dump_private_key(&addr).unwrap();
-    let pk = import::CompressedPublicKey::from_private_key(&SECP, &sk).unwrap();
-    assert_eq!(addr, Address::p2wpkh(&pk, Network::Regtest));
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_generate(cl: &Client) {
-    if version() < 180000 {
-        let blocks = cl.generate(4, None).unwrap();
-        assert_eq!(blocks.len(), 4);
-        let blocks = cl.generate(6, Some(45)).unwrap();
-        assert_eq!(blocks.len(), 6);
-    } else if version() < 190000 {
-        assert_deprecated!(cl.generate(5, None));
-    } else if version() < 210000 {
-        assert_not_found!(cl.generate(5, None));
-    } else {
-        // Bitcoin Core v0.21 appears to return this with a generic -1 error code,
-        // rather than the expected -32601 code (RPC_METHOD_NOT_FOUND).
-        assert_error_message!(cl.generate(5, None), -1, "replaced by the -generate cli option");
-    }
-}
-
-#[cfg(feature = "dogecoin")]
 fn test_generate(cl: &Client) {
     let blocks = cl.generate(4, None).unwrap();
     assert_eq!(blocks.len(), 4);
@@ -350,17 +215,6 @@ fn test_get_balance_generate_to_address(cl: &Client) {
     let blocks = cl.generate_to_address(500, &cl.get_new_address(None, None).unwrap()).unwrap();
     assert_eq!(blocks.len(), 500);
     assert_ne!(cl.get_balance(None, None).unwrap(), initial);
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_balances_generate_to_address(cl: &Client) {
-    if version() >= 190000 {
-        let initial = cl.get_balances().unwrap();
-
-        let blocks = cl.generate_to_address(500, &cl.get_new_address(None, None).unwrap()).unwrap();
-        assert_eq!(blocks.len(), 500);
-        assert_ne!(cl.get_balances().unwrap(), initial);
-    }
 }
 
 fn test_get_best_block_hash(cl: &Client) {
@@ -406,9 +260,6 @@ fn test_get_block_stats(cl: &Client) {
     let tip = cl.get_block_count().unwrap();
     let tip_hash = cl.get_best_block_hash().unwrap();
     let header = cl.get_block_header(&tip_hash).unwrap();
-    #[cfg(not(feature = "dogecoin"))]
-    let stats = cl.get_block_stats(tip).unwrap();
-    #[cfg(feature = "dogecoin")]
     let stats = cl.get_block_stats(tip_hash).unwrap();
     assert_eq!(header.block_hash(), stats.block_hash);
     assert_eq!(header.time, stats.time as u32);
@@ -420,9 +271,6 @@ fn test_get_block_stats_fields(cl: &Client) {
     let tip_hash = cl.get_best_block_hash().unwrap();
     let header = cl.get_block_header(&tip_hash).unwrap();
     let fields = [BsFields::BlockHash, BsFields::Height, BsFields::TotalFee];
-    #[cfg(not(feature = "dogecoin"))]
-    let stats = cl.get_block_stats_fields(tip, &fields).unwrap();
-    #[cfg(feature = "dogecoin")]
     let stats = cl.get_block_stats_fields(tip_hash, &fields).unwrap();
     assert_eq!(header.block_hash(), stats.block_hash.unwrap());
     assert_eq!(tip, stats.height.unwrap());
@@ -430,70 +278,11 @@ fn test_get_block_stats_fields(cl: &Client) {
     assert!(stats.avg_fee.is_none());
 }
 
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_address_info(cl: &Client) {
-    let addr = cl.get_new_address(None, Some(json::AddressType::Legacy)).unwrap();
-    let info = cl.get_address_info(&addr).unwrap();
-    assert!(!info.is_witness.unwrap());
-
-    let addr = cl.get_new_address(None, Some(json::AddressType::Bech32)).unwrap();
-    let info = cl.get_address_info(&addr).unwrap();
-    assert!(!info.witness_program.unwrap().is_empty());
-
-    let addr = cl.get_new_address(None, Some(json::AddressType::P2shSegwit)).unwrap();
-    let info = cl.get_address_info(&addr).unwrap();
-    assert!(!info.hex.unwrap().is_empty());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-#[allow(deprecated)]
-fn test_set_label(cl: &Client) {
-    let addr = cl.get_new_address(Some("label"), None).unwrap();
-    let info = cl.get_address_info(&addr).unwrap();
-    if version() >= 0_20_00_00 {
-        assert!(info.label.is_none());
-        assert_eq!(info.labels[0], json::GetAddressInfoResultLabel::Simple("label".into()));
-    } else {
-        assert_eq!(info.label.as_ref().unwrap(), "label");
-        assert_eq!(
-            info.labels[0],
-            json::GetAddressInfoResultLabel::WithPurpose {
-                name: "label".into(),
-                purpose: json::GetAddressInfoResultLabelPurpose::Receive,
-            }
-        );
-    }
-
-    cl.set_label(&addr, "other").unwrap();
-    let info = cl.get_address_info(&addr).unwrap();
-    if version() >= 0_20_00_00 {
-        assert!(info.label.is_none());
-        assert_eq!(info.labels[0], json::GetAddressInfoResultLabel::Simple("other".into()));
-    } else {
-        assert_eq!(info.label.as_ref().unwrap(), "other");
-        assert_eq!(
-            info.labels[0],
-            json::GetAddressInfoResultLabel::WithPurpose {
-                name: "other".into(),
-                purpose: json::GetAddressInfoResultLabelPurpose::Receive,
-            }
-        );
-    }
-}
-
 fn test_send_to_address(cl: &Client) {
     let addr = cl.get_new_address(None, None).unwrap();
     let _ = cl.send_to_address(&addr, btc(1), Some("cc"), None, None, None, None, None).unwrap();
     let _ = cl.send_to_address(&addr, btc(1), None, Some("tt"), None, None, None, None).unwrap();
     let _ = cl.send_to_address(&addr, btc(1), None, None, Some(true), None, None, None).unwrap();
-    #[cfg(not(feature = "dogecoin"))]
-    {
-        let est = json::EstimateMode::Conservative;
-        let _ =
-            cl.send_to_address(&addr, btc(1), None, None, None, Some(true), None, None).unwrap();
-        let _ = cl.send_to_address(&addr, btc(1), None, None, None, None, Some(3), None).unwrap();
-        let _ = cl.send_to_address(&addr, btc(1), None, None, None, None, None, Some(est)).unwrap();
-    }
 }
 
 fn test_get_received_by_address(cl: &Client) {
@@ -558,12 +347,6 @@ fn test_get_raw_transaction(cl: &Client) {
 
     let info = cl.get_raw_transaction_info(&txid, None).unwrap();
     assert_eq!(info.txid, txid);
-
-    #[cfg(not(feature = "dogecoin"))]
-    {
-        let blocks = cl.generate_to_address(7, &cl.get_new_address(None, None).unwrap()).unwrap();
-        let _ = cl.get_raw_transaction_info(&txid, Some(&blocks[0])).unwrap();
-    }
 }
 
 fn test_get_raw_mempool(cl: &Client) {
@@ -628,9 +411,6 @@ fn test_get_mempool_entry(cl: &Client) {
     let txid =
         cl.send_to_address(&RANDOM_ADDRESS, btc(1), None, None, None, None, None, None).unwrap();
     let entry = cl.get_mempool_entry(&txid).unwrap();
-    #[cfg(not(feature = "dogecoin"))]
-    assert!(entry.spent_by.is_empty());
-
     let fake = Txid::hash(&[1, 2]);
     assert!(cl.get_mempool_entry(&fake).is_err());
 }
@@ -644,96 +424,6 @@ fn test_lock_unspent_unlock_unspent(cl: &Client) {
 
     assert!(cl.lock_unspent(&[OutPoint::new(txid, 0)]).unwrap());
     assert!(cl.unlock_unspent_all().unwrap());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_block_filter(cl: &Client) {
-    let blocks = cl.generate_to_address(7, &cl.get_new_address(None, None).unwrap()).unwrap();
-    if version() >= 190000 {
-        let _ = cl.get_block_filter(&blocks[0]).unwrap();
-    } else {
-        assert_not_found!(cl.get_block_filter(&blocks[0]));
-    }
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_sign_raw_transaction_with_send_raw_transaction(cl: &Client) {
-    use import::{
-        sighash, transaction::Version, CompressedPublicKey, LockTime, PrivateKey, ScriptBuf,
-        Sequence, Transaction, TxIn, TxOut, Witness,
-    };
-    let sk = PrivateKey {
-        network: Network::Regtest.into(),
-        inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
-        compressed: true,
-    };
-    let pk = CompressedPublicKey::from_private_key(&SECP, &sk).unwrap();
-    let addr = Address::p2wpkh(&pk, Network::Regtest);
-
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-
-    let tx = Transaction {
-        version: Version::ONE,
-        lock_time: LockTime::ZERO,
-        input: vec![TxIn {
-            previous_output: OutPoint {
-                txid: unspent.txid,
-                vout: unspent.vout,
-            },
-            sequence: Sequence::MAX,
-            script_sig: ScriptBuf::new(),
-            witness: Witness::new(),
-        }],
-        output: vec![TxOut {
-            value: (unspent.amount - *FEE),
-            script_pubkey: addr.script_pubkey(),
-        }],
-    };
-
-    let input = json::SignRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        script_pub_key: unspent.script_pub_key,
-        redeem_script: None,
-        amount: Some(unspent.amount),
-    };
-    let res = cl.sign_raw_transaction_with_wallet(&tx, Some(&[input]), None).unwrap();
-    assert!(res.complete);
-    let txid = cl.send_raw_transaction(&res.transaction().unwrap()).unwrap();
-
-    let tx = Transaction {
-        version: Version::ONE,
-        lock_time: LockTime::ZERO,
-        input: vec![TxIn {
-            previous_output: OutPoint {
-                txid: txid,
-                vout: 0,
-            },
-            script_sig: ScriptBuf::new(),
-            sequence: Sequence::MAX,
-            witness: Witness::new(),
-        }],
-        output: vec![TxOut {
-            value: (unspent.amount - *FEE - *FEE),
-            script_pubkey: RANDOM_ADDRESS.script_pubkey(),
-        }],
-    };
-
-    let res = cl
-        .sign_raw_transaction_with_key(
-            &tx,
-            &[sk],
-            None,
-            Some(sighash::EcdsaSighashType::All.into()),
-        )
-        .unwrap();
-    assert!(res.complete);
-    let _ = cl.send_raw_transaction(&res.transaction().unwrap()).unwrap();
 }
 
 fn test_invalidate_block_reconsider_block(cl: &Client) {
@@ -813,8 +503,6 @@ fn test_fund_raw_transaction(cl: &Client) {
         lock_unspents: Some(true),
         fee_rate: Some(*FEE),
         subtract_fee_from_outputs: Some(vec![0]),
-        #[cfg(not(feature = "dogecoin"))]
-        replaceable: Some(true),
         conf_target: None,
         estimate_mode: None,
     };
@@ -826,23 +514,12 @@ fn test_fund_raw_transaction(cl: &Client) {
         add_inputs: None,
         change_address: None,
         change_position: Some(0),
-        #[cfg(not(feature = "dogecoin"))]
-        change_type: Some(json::AddressType::Legacy),
-        #[cfg(feature = "dogecoin")]
         change_type: None,
         include_watching: Some(true),
         lock_unspents: Some(true),
         fee_rate: None,
         subtract_fee_from_outputs: Some(vec![0]),
-        #[cfg(not(feature = "dogecoin"))]
-        replaceable: Some(true),
-        #[cfg(not(feature = "dogecoin"))]
-        conf_target: Some(2),
-        #[cfg(feature = "dogecoin")]
         conf_target: None,
-        #[cfg(not(feature = "dogecoin"))]
-        estimate_mode: Some(json::EstimateMode::Conservative),
-        #[cfg(feature = "dogecoin")]
         estimate_mode: None,
     };
     let tx = cl.create_raw_transaction_hex(&[], &output, Some(500_000), Some(true)).unwrap();
@@ -850,318 +527,17 @@ fn test_fund_raw_transaction(cl: &Client) {
     let _ = funded.transaction().unwrap();
 }
 
-#[cfg(not(feature = "dogecoin"))]
-fn test_test_mempool_accept(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: Some(0xFFFFFFFF),
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), unspent.amount - *FEE);
-
-    let tx =
-        cl.create_raw_transaction(&[input.clone()], &output, Some(500_000), Some(false)).unwrap();
-    let res = cl.test_mempool_accept(&[&tx]).unwrap();
-    assert!(!res[0].allowed);
-    assert!(res[0].reject_reason.is_some());
-    let signed =
-        cl.sign_raw_transaction_with_wallet(&tx, None, None).unwrap().transaction().unwrap();
-    let res = cl.test_mempool_accept(&[&signed]).unwrap();
-    assert!(res[0].allowed, "not allowed: {:?}", res[0].reject_reason);
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_wallet_create_funded_psbt(cl: &Client) {
-    let addr = cl.get_new_address(None, None).unwrap();
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-
-    let options = json::WalletCreateFundedPsbtOptions {
-        add_inputs: None,
-        change_address: None,
-        change_position: Some(1),
-        change_type: Some(json::AddressType::Legacy),
-        include_watching: Some(true),
-        lock_unspent: Some(true),
-        fee_rate: Some(*FEE),
-        subtract_fee_from_outputs: vec![0],
-        replaceable: Some(true),
-        conf_target: None,
-        estimate_mode: None,
-    };
-    let _ = cl
-        .wallet_create_funded_psbt(
-            &[input.clone()],
-            &output,
-            Some(500_000),
-            Some(options),
-            Some(true),
-        )
-        .unwrap();
-
-    let options = json::WalletCreateFundedPsbtOptions {
-        add_inputs: None,
-        change_address: Some(addr.into_unchecked()),
-        change_position: Some(1),
-        change_type: None,
-        include_watching: Some(true),
-        lock_unspent: Some(true),
-        fee_rate: None,
-        subtract_fee_from_outputs: vec![0],
-        replaceable: Some(true),
-        conf_target: Some(3),
-        estimate_mode: Some(json::EstimateMode::Conservative),
-    };
-    let psbt = cl
-        .wallet_create_funded_psbt(&[input], &output, Some(500_000), Some(options), Some(true))
-        .unwrap();
-    assert!(!psbt.psbt.is_empty());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_wallet_process_psbt(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-    let psbt = cl
-        .wallet_create_funded_psbt(&[input.clone()], &output, Some(500_000), None, Some(true))
-        .unwrap();
-
-    let res = cl.wallet_process_psbt(&psbt.psbt, Some(true), None, Some(true)).unwrap();
-    assert!(res.complete);
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_join_psbt(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent1 = unspent[0].clone();
-    let input = json::CreateRawTransactionInput {
-        txid: unspent1.txid,
-        vout: unspent1.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-    let psbt1 = cl
-        .wallet_create_funded_psbt(&[input.clone()], &output, Some(500_000), None, Some(true))
-        .unwrap();
-
-    let unspent = unspent.into_iter().nth(1).unwrap();
-    let input2 = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output2 = HashMap::new();
-    output2.insert(RANDOM_ADDRESS.to_string(), btc(1));
-    let psbt2 = cl
-        .wallet_create_funded_psbt(&[input2.clone()], &output, Some(500_000), None, Some(true))
-        .unwrap();
-
-    let psbt = cl.join_psbt(&[psbt1.psbt, psbt2.psbt]).unwrap();
-    assert!(!psbt.is_empty());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_combine_psbt(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-    let psbt1 = cl
-        .wallet_create_funded_psbt(&[input.clone()], &output, Some(500_000), None, Some(true))
-        .unwrap();
-
-    let psbt = cl.combine_psbt(&[psbt1.psbt.clone(), psbt1.psbt]).unwrap();
-    assert!(!psbt.is_empty());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_combine_raw_transaction(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-    let tx = cl.create_raw_transaction_hex(&[input.clone()], &output, Some(500_000), None).unwrap();
-
-    let transaction = cl.combine_raw_transaction(&[tx.clone(), tx]).unwrap();
-
-    assert!(!transaction.is_empty());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_create_psbt(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-
-    let _ = cl.create_psbt(&[input], &output, Some(500_000), Some(true)).unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_finalize_psbt(cl: &Client) {
-    let options = json::ListUnspentQueryOptions {
-        minimum_amount: Some(btc(2)),
-        ..Default::default()
-    };
-    let unspent = cl.list_unspent(Some(6), None, None, None, Some(options)).unwrap();
-    let unspent = unspent.into_iter().nth(0).unwrap();
-    let input = json::CreateRawTransactionInput {
-        txid: unspent.txid,
-        vout: unspent.vout,
-        sequence: None,
-    };
-    let mut output = HashMap::new();
-    output.insert(RANDOM_ADDRESS.to_string(), btc(1));
-    let psbt = cl
-        .wallet_create_funded_psbt(&[input.clone()], &output, Some(500_000), None, Some(true))
-        .unwrap();
-
-    let res = cl.finalize_psbt(&psbt.psbt, Some(true)).unwrap();
-    assert!(!res.complete);
-    //TODO(stevenroose) add sign psbt and test hex field
-    //assert!(res.hex.is_some());
-}
-
 fn test_list_received_by_address(cl: &Client) {
     let addr = cl.get_new_address(None, None).unwrap();
     let txid = cl.send_to_address(&addr, btc(1), None, None, None, None, None, None).unwrap();
 
-    if !cfg!(feature = "dogecoin") {
-        let _ = cl.list_received_by_address(Some(&addr), None, None, None).unwrap();
-        let _ = cl.list_received_by_address(Some(&addr), None, Some(true), None).unwrap();
-        let _ = cl.list_received_by_address(Some(&addr), None, None, Some(true)).unwrap();
-    }
     let _ = cl.list_received_by_address(None, Some(200), None, None).unwrap();
-
-    if !cfg!(feature = "dogecoin") {
-        let res = cl.list_received_by_address(Some(&addr), Some(0), None, None).unwrap();
-        assert_eq!(res[0].txids, vec![txid]);
-    }
 
     let res = cl.list_received_by_address(None, Some(0), None, None).unwrap();
     assert_eq!(
         res.iter().find(|x| x.address.clone().assume_checked() == addr).map(|x| x.txids.clone()),
         Some(vec![txid])
     );
-}
-
-#[cfg(not(feature = "dogecoin"))]
-// Got error: "Only legacy wallets are supported by this command"
-fn test_import_public_key(cl: &Client) {
-    let sk = import::PrivateKey {
-        network: Network::Regtest.into(),
-        inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
-        compressed: true,
-    };
-    cl.import_public_key(&sk.public_key(&SECP), None, None).unwrap();
-    cl.import_public_key(&sk.public_key(&SECP), Some("l"), None).unwrap();
-    cl.import_public_key(&sk.public_key(&SECP), None, Some(false)).unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-// Got error: "Only legacy wallets are supported by this command"
-fn test_import_priv_key(cl: &Client) {
-    let sk = import::PrivateKey {
-        network: Network::Regtest.into(),
-        inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
-        compressed: true,
-    };
-    cl.import_private_key(&sk, None, None).unwrap();
-    cl.import_private_key(&sk, Some("l"), None).unwrap();
-    cl.import_private_key(&sk, None, Some(false)).unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-// Got error: "Only legacy wallets are supported by this command"
-fn test_import_address(cl: &Client) {
-    let sk = import::PrivateKey {
-        network: Network::Regtest.into(),
-        inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
-        compressed: true,
-    };
-    let addr = Address::p2pkh(&sk.public_key(&SECP), Network::Regtest);
-    cl.import_address(&addr, None, None).unwrap();
-    cl.import_address(&addr, Some("l"), None).unwrap();
-    cl.import_address(&addr, None, Some(false)).unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-// Got error: "Only legacy wallets are supported by this command"
-fn test_import_address_script(cl: &Client) {
-    let sk = import::PrivateKey {
-        network: Network::Regtest.into(),
-        inner: secp256k1::SecretKey::new(&mut secp256k1::rand::thread_rng()),
-        compressed: true,
-    };
-    let addr = Address::p2pkh(&sk.public_key(&SECP), Network::Regtest);
-    cl.import_address_script(&addr.script_pubkey(), None, None, None).unwrap();
-    cl.import_address_script(&addr.script_pubkey(), Some("l"), None, None).unwrap();
-    cl.import_address_script(&addr.script_pubkey(), None, Some(false), None).unwrap();
-    cl.import_address_script(&addr.script_pubkey(), None, None, Some(true)).unwrap();
 }
 
 fn test_estimate_smart_fee(cl: &Client) {
@@ -1193,127 +569,6 @@ fn test_get_peer_info(cl: &Client) {
     }
 }
 
-#[cfg(not(feature = "dogecoin"))]
-fn test_rescan_blockchain(cl: &Client) {
-    let count = cl.get_block_count().unwrap() as usize;
-    assert!(count > 21);
-    let (start, stop) = cl.rescan_blockchain(Some(count - 20), Some(count - 1)).unwrap();
-    assert_eq!(start, count - 20);
-    assert_eq!(stop, Some(count - 1));
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_create_wallet(cl: &Client) {
-    let wallet_names = vec!["alice", "bob", "carol", "denise", "emily"];
-
-    struct WalletParams<'a> {
-        name: &'a str,
-        disable_private_keys: Option<bool>,
-        blank: Option<bool>,
-        passphrase: Option<&'a str>,
-        avoid_reuse: Option<bool>,
-    }
-
-    let mut wallet_params = vec![
-        WalletParams {
-            name: wallet_names[0],
-            disable_private_keys: None,
-            blank: None,
-            passphrase: None,
-            avoid_reuse: None,
-        },
-        WalletParams {
-            name: wallet_names[1],
-            disable_private_keys: Some(true),
-            blank: None,
-            passphrase: None,
-            avoid_reuse: None,
-        },
-        WalletParams {
-            name: wallet_names[2],
-            disable_private_keys: None,
-            blank: Some(true),
-            passphrase: None,
-            avoid_reuse: None,
-        },
-    ];
-
-    if version() >= 190000 {
-        wallet_params.push(WalletParams {
-            name: wallet_names[3],
-            disable_private_keys: None,
-            blank: None,
-            passphrase: Some("pass"),
-            avoid_reuse: None,
-        });
-        wallet_params.push(WalletParams {
-            name: wallet_names[4],
-            disable_private_keys: None,
-            blank: None,
-            passphrase: None,
-            avoid_reuse: Some(true),
-        });
-    }
-
-    for wallet_param in wallet_params {
-        let result = cl
-            .create_wallet(
-                wallet_param.name,
-                wallet_param.disable_private_keys,
-                wallet_param.blank,
-                wallet_param.passphrase,
-                wallet_param.avoid_reuse,
-            )
-            .unwrap();
-
-        assert_eq!(result.name, wallet_param.name);
-        let expected_warning = match (wallet_param.passphrase, wallet_param.avoid_reuse) {
-            (None, Some(true)) => {
-                Some("Empty string given as passphrase, wallet will not be encrypted.".to_string())
-            }
-            _ => None, // Some("".to_string()),
-        };
-        #[cfg(not(feature = "dogecoin"))]
-        assert_eq!(result.warnings, expected_warning.map(|x| vec![x]));
-        #[cfg(feature = "dogecoin")]
-        assert_eq!(result.warning, expected_warning);
-
-        let wallet_client = new_wallet_client(wallet_param.name);
-        let wallet_info = wallet_client.get_wallet_info().unwrap();
-
-        assert_eq!(wallet_info.wallet_name, wallet_param.name);
-
-        let has_private_keys = !wallet_param.disable_private_keys.unwrap_or(false);
-        assert_eq!(wallet_info.private_keys_enabled, has_private_keys);
-        // let has_hd_seed = has_private_keys && !wallet_param.blank.unwrap_or(false);
-        // assert_eq!(wallet_info.hd_seed_id.is_some(), has_hd_seed);
-        let has_avoid_reuse = wallet_param.avoid_reuse.unwrap_or(false);
-        assert_eq!(wallet_info.avoid_reuse.unwrap_or(false), has_avoid_reuse);
-        assert_eq!(
-            wallet_info.scanning.unwrap_or(json::ScanningDetails::NotScanning(false)),
-            json::ScanningDetails::NotScanning(false)
-        );
-    }
-
-    let mut loaded_wallet_list = cl.list_wallets().unwrap();
-
-    loaded_wallet_list.sort();
-
-    // Main wallet created for tests
-    assert!(loaded_wallet_list.iter().any(|w| w == "testwallet"));
-    loaded_wallet_list.retain(|w| w != "testwallet" && w != "");
-
-    // Created wallets
-    assert!(loaded_wallet_list.iter().zip(wallet_names).all(|(a, b)| a == b));
-
-    // get all wallets, including any that are not loaded
-    let wallet_list = cl.list_wallet_dir().unwrap();
-    // check that wallet_list is a superset of loaded_wallet_list
-    for ref wallet in loaded_wallet_list {
-        assert!(wallet_list.iter().any(|x| x == wallet));
-    }
-}
-
 fn test_get_tx_out_set_info(cl: &Client) {
     cl.get_tx_out_set_info(None, None, None).unwrap();
 }
@@ -1325,9 +580,6 @@ fn test_get_chain_tips(cl: &Client) {
 
 fn test_add_node(cl: &Client) {
     cl.add_node("127.0.0.1:1234").unwrap();
-    #[cfg(not(feature = "dogecoin"))]
-    assert_error_message!(cl.add_node("127.0.0.1:1234"), -23, "Error: Node already added");
-    #[cfg(feature = "dogecoin")]
     assert_error_message!(cl.add_node("127.0.0.1:1234"), -23, "Error: Unable to add node");
     cl.remove_node("127.0.0.1:1234").unwrap();
     cl.onetry_node("127.0.0.1:1234").unwrap();
@@ -1343,40 +595,12 @@ fn test_get_added_node_info(cl: &Client) {
     assert_eq!(cl.get_added_node_info(Some("127.0.0.1:4321")).unwrap().len(), 1);
 }
 
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_node_addresses(cl: &Client) {
-    cl.get_node_addresses(None).unwrap();
-}
-
 fn test_disconnect_node(cl: &Client) {
     assert_error_message!(
         cl.disconnect_node("127.0.0.1:1234"),
         -29,
         "Node not found in connected nodes"
     );
-    #[cfg(not(feature = "dogecoin"))]
-    assert_error_message!(cl.disconnect_node_by_id(1), -29, "Node not found in connected nodes");
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_add_ban(cl: &Client) {
-    cl.add_ban("127.0.0.1", 0, false).unwrap();
-    let res = cl.list_banned().unwrap();
-    assert_eq!(res.len(), 1);
-
-    cl.remove_ban("127.0.0.1").unwrap();
-    let res = cl.list_banned().unwrap();
-    assert_eq!(res.len(), 0);
-
-    cl.add_ban("127.0.0.1", 0, false).unwrap();
-    let res = cl.list_banned().unwrap();
-    assert_eq!(res.len(), 1);
-
-    cl.clear_banned().unwrap();
-    let res = cl.list_banned().unwrap();
-    assert_eq!(res.len(), 0);
-
-    assert_error_message!(cl.add_ban("INVALID_STRING", 0, false), -30, "Error: Invalid IP/Subnet");
 }
 
 fn test_set_network_active(cl: &Client) {
@@ -1386,32 +610,6 @@ fn test_set_network_active(cl: &Client) {
 
 fn test_get_net_totals(cl: &Client) {
     cl.get_net_totals().unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_network_hash_ps(cl: &Client) {
-    cl.get_network_hash_ps(None, None).unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_uptime(cl: &Client) {
-    cl.uptime().unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_scantxoutset(cl: &Client) {
-    use bitcoincore_rpc::bitcoincore_rpc_json::ScanTxOutRequest;
-    let addr = cl.get_new_address(None, None).unwrap();
-
-    cl.generate_to_address(2, &addr).unwrap();
-    cl.generate_to_address(7, &cl.get_new_address(None, None).unwrap()).unwrap();
-
-    let utxos = cl
-        .scan_tx_out_set_blocking(&[ScanTxOutRequest::Single(format!("addr({})", addr))])
-        .unwrap();
-
-    assert_eq!(utxos.unspents.len(), 2);
-    assert_eq!(utxos.success, Some(true));
 }
 
 fn test_getblocktemplate(cl: &Client) {
@@ -1426,103 +624,6 @@ fn test_getblocktemplate(cl: &Client) {
 
     // cleanup mempool transaction
     cl.generate_to_address(2, &RANDOM_ADDRESS).unwrap();
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_unloadwallet(cl: &Client) {
-    cl.create_wallet("testunloadwallet", None, None, None, None).unwrap();
-
-    let res = new_wallet_client("testunloadwallet").unload_wallet(None).unwrap();
-
-    if version() >= 210000 {
-        assert!(res.is_some());
-    } else {
-        assert!(res.is_none());
-    }
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_loadwallet(_: &Client) {
-    let wallet_name = "testloadwallet";
-    let wallet_client = new_wallet_client(wallet_name);
-
-    assert!(wallet_client.load_wallet(wallet_name).is_err());
-    wallet_client.create_wallet(wallet_name, None, None, None, None).unwrap();
-    assert!(wallet_client.load_wallet(wallet_name).is_err());
-    wallet_client.unload_wallet(None).unwrap();
-
-    let res = wallet_client.load_wallet(wallet_name).unwrap();
-    assert_eq!(res.name, wallet_name);
-    #[cfg(not(feature = "dogecoin"))]
-    assert_eq!(res.warnings, None); // Some(["".into()));
-    #[cfg(feature = "dogecoin")]
-    assert_eq!(res.warning, None); // Some(["".into()));
-}
-
-// dogecoind backup only in its own system directory, and ignores the given full path.
-#[cfg(not(feature = "dogecoin"))]
-fn test_backupwallet(_: &Client) {
-    let wallet_client = new_wallet_client("testbackupwallet");
-    let backup_path = format!("{}/testbackupwallet.dat", get_testdir());
-
-    assert!(wallet_client.backup_wallet(None).is_err());
-    assert!(wallet_client.backup_wallet(Some(&backup_path)).is_err());
-    wallet_client.create_wallet("testbackupwallet", None, None, None, None).unwrap();
-    assert!(wallet_client.backup_wallet(None).is_err());
-    assert!(wallet_client.backup_wallet(Some(&backup_path)).is_ok());
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_wait_for_new_block(cl: &Client) {
-    let height = cl.get_block_count().unwrap();
-    let hash = cl.get_block_hash(height).unwrap();
-
-    assert!(cl.wait_for_new_block(std::u64::MAX).is_err()); // JSON integer out of range
-    assert_eq!(
-        cl.wait_for_new_block(100).unwrap(),
-        json::BlockRef {
-            hash,
-            height
-        }
-    );
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_wait_for_block(cl: &Client) {
-    let height = cl.get_block_count().unwrap();
-    let hash = cl.get_block_hash(height).unwrap();
-
-    assert!(cl.wait_for_block(&hash, std::u64::MAX).is_err()); // JSON integer out of range
-    assert_eq!(
-        cl.wait_for_block(&hash, 0).unwrap(),
-        json::BlockRef {
-            hash,
-            height
-        }
-    );
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_descriptor_info(cl: &Client) {
-    let res = cl
-        .get_descriptor_info(r"pkh(cSQPHDBwXGjVzWRqAHm6zfvQhaTuj1f2bFH58h55ghbjtFwvmeXR)")
-        .unwrap();
-    assert_eq!(
-        res.descriptor,
-        r"pkh(02e96fe52ef0e22d2f131dd425ce1893073a3c6ad20e8cac36726393dfb4856a4c)#62k9sn4x"
-    );
-    assert_eq!(res.is_range, false);
-    assert_eq!(res.is_solvable, true);
-    assert_eq!(res.has_private_keys, true);
-
-    // Checksum introduced in: https://github.com/bitcoin/bitcoin/commit/26d3fad1093dfc697048313be7a96c9adf723654
-    if version() >= 190000 {
-        assert_eq!(res.checksum, Some("37v3lm8x".to_string()));
-    } else {
-        assert!(res.checksum.is_none());
-    }
-
-    assert!(cl.get_descriptor_info("abcdef").is_err());
 }
 
 #[allow(unused)]
@@ -1554,98 +655,14 @@ fn test_add_multisig_address(cl: &Client) {
         .is_ok());
 }
 
-#[cfg(not(feature = "dogecoin"))]
-#[rustfmt::skip]
-fn test_derive_addresses(cl: &Client) {
-    use import::address::AddressUnchecked;
-    let descriptor = r"pkh(02e96fe52ef0e22d2f131dd425ce1893073a3c6ad20e8cac36726393dfb4856a4c)#62k9sn4x";
-    assert_eq!(
-        cl.derive_addresses(descriptor, None).unwrap(),
-        vec!["mrkwtj5xpYQjHeJe5wsweNjVeTKkvR5fCr".parse::<AddressUnchecked>().unwrap().assume_checked()]
-    );
-    assert!(cl.derive_addresses(descriptor, Some([0, 1])).is_err()); // Range should not be specified for an unranged descriptor
-
-    let descriptor = std::concat!(
-        r"wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fi",
-        r"tvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/0/*)#g8l47ngv",
-    );
-    assert_eq!(cl.derive_addresses(descriptor, Some([0, 1])).unwrap(), vec![
-        "bcrt1q5n5tjkpva8v5s0uadu2y5f0g7pn4h5eqaq2ux2".parse::<AddressUnchecked>().unwrap().assume_checked(),
-        "bcrt1qcgl303ht03ja2e0hudpwk7ypcxk5t478wspzlt".parse::<AddressUnchecked>().unwrap().assume_checked(),
-    ]);
-    assert!(cl.derive_addresses(descriptor, None).is_err()); // Range must be specified for a ranged descriptor
-}
-
 fn test_get_mempool_info(cl: &Client) {
     let res = cl.get_mempool_info().unwrap();
 
-    if !cfg!(feature = "dogecoin") && version() >= 190000 {
-        assert!(res.loaded.is_some());
-    } else {
-        assert!(res.loaded.is_none());
-    }
-
-    if !cfg!(feature = "dogecoin") && version() >= 210000 {
-        assert!(res.unbroadcast_count.is_some());
-    } else {
-        assert!(res.unbroadcast_count.is_none());
-    }
-
-    if !cfg!(feature = "dogecoin") && version() >= 220000 {
-        assert!(res.total_fee.is_some());
-    } else {
-        assert!(res.total_fee.is_none());
-    }
-
-    if !cfg!(feature = "dogecoin") && version() >= 240000 {
-        assert!(res.incremental_relay_fee.is_some());
-        assert!(res.full_rbf.is_some());
-    } else {
-        assert!(res.incremental_relay_fee.is_none());
-        assert!(res.full_rbf.is_none());
-    }
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_index_info(cl: &Client) {
-    if version() >= 210000 {
-        let gii = cl.get_index_info().unwrap();
-        assert!(gii.txindex.is_some());
-        assert!(gii.coinstatsindex.is_none());
-        assert!(gii.basic_block_filter_index.is_some());
-    }
-}
-
-#[cfg(not(feature = "dogecoin"))]
-fn test_get_zmq_notifications(cl: &Client) {
-    use bitcoincore_rpc::bitcoincore_rpc_json::GetZmqNotificationsResult;
-    let mut zmq_info = cl.get_zmq_notifications().unwrap();
-
-    // it doesn't matter in which order Bitcoin Core returns the result,
-    // but checking it is easier if it has a known order
-
-    // sort_by_key does not allow returning references to parameters of the compare function
-    // (removing the lifetime from the return type mimics this behavior, but we don't want it)
-    fn compare_fn(result: &GetZmqNotificationsResult) -> impl Ord + '_ {
-        (&result.address, &result.notification_type, result.hwm)
-    }
-    zmq_info.sort_by(|a, b| compare_fn(a).cmp(&compare_fn(b)));
-
-    assert!(
-        zmq_info
-            == [
-                GetZmqNotificationsResult {
-                    notification_type: "pubrawblock".to_owned(),
-                    address: "tcp://0.0.0.0:28332".to_owned(),
-                    hwm: 1000
-                },
-                GetZmqNotificationsResult {
-                    notification_type: "pubrawtx".to_owned(),
-                    address: "tcp://0.0.0.0:28333".to_owned(),
-                    hwm: 1000
-                },
-            ]
-    );
+    assert!(res.loaded.is_none());
+    assert!(res.unbroadcast_count.is_none());
+    assert!(res.total_fee.is_none());
+    assert!(res.incremental_relay_fee.is_none());
+    assert!(res.full_rbf.is_none());
 }
 
 fn test_stop(cl: Client) {

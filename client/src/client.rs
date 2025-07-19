@@ -404,7 +404,7 @@ pub trait RpcApi: Sized {
         // The softfork fields are not backwards compatible:
         // - 0.18.x returns a "softforks" array and a "bip9_softforks" map.
         // - 0.19.x returns a "softforks" map.
-        Ok(if self.version()? < 190000 || cfg!(feature = "dogecoin") {
+        Ok({
             use crate::Error::UnexpectedStructure as err;
 
             // First, remove both incompatible softfork fields.
@@ -465,8 +465,6 @@ pub trait RpcApi: Sized {
                 );
             }
             ret
-        } else {
-            serde_json::from_value(raw)?
         })
     }
 
@@ -485,26 +483,10 @@ pub trait RpcApi: Sized {
         self.call("getblockhash", &[height.into()])
     }
 
-    #[cfg(not(feature = "dogecoin"))]
-    fn get_block_stats(&self, height: u64) -> Result<json::GetBlockStatsResult> {
-        self.call("getblockstats", &[height.into()])
-    }
-
-    #[cfg(feature = "dogecoin")]
     fn get_block_stats(&self, hash: BlockHash) -> Result<json::GetBlockStatsResult> {
         self.call("getblockstats", &[into_json(hash)?])
     }
 
-    #[cfg(not(feature = "dogecoin"))]
-    fn get_block_stats_fields(
-        &self,
-        height: u64,
-        fields: &[json::BlockStatsFields],
-    ) -> Result<json::GetBlockStatsResultPartial> {
-        self.call("getblockstats", &[height.into(), fields.into()])
-    }
-
-    #[cfg(feature = "dogecoin")]
     fn get_block_stats_fields(
         &self,
         hash: BlockHash,
@@ -787,18 +769,12 @@ pub trait RpcApi: Sized {
         utxos: &[json::CreateRawTransactionInput],
         outs: &HashMap<String, Amount>,
         locktime: Option<i64>,
-        replaceable: Option<bool>,
+        _replaceable: Option<bool>,
     ) -> Result<String> {
         let outs_converted = serde_json::Map::from_iter(
             outs.iter().map(|(k, v)| (k.clone(), serde_json::Value::from(v.to_btc()))),
         );
-        let mut args = [
-            into_json(utxos)?,
-            into_json(outs_converted)?,
-            opt_into_json(locktime)?,
-            #[cfg(not(feature = "dogecoin"))]
-            opt_into_json(replaceable)?,
-        ];
+        let mut args = [into_json(utxos)?, into_json(outs_converted)?, opt_into_json(locktime)?];
         let defaults = [into_json(0i64)?, null()];
         self.call("createrawtransaction", handle_defaults(&mut args, &defaults))
     }
@@ -828,14 +804,9 @@ pub trait RpcApi: Sized {
         &self,
         tx: R,
         options: Option<&json::FundRawTransactionOptions>,
-        is_witness: Option<bool>,
+        _is_witness: Option<bool>,
     ) -> Result<json::FundRawTransactionResult> {
-        let mut args = [
-            tx.raw_hex().into(),
-            opt_into_json(options)?,
-            #[cfg(not(feature = "dogecoin"))]
-            opt_into_json(is_witness)?,
-        ];
+        let mut args = [tx.raw_hex().into(), opt_into_json(options)?];
         let defaults = [empty_obj(), null()];
         self.call("fundrawtransaction", handle_defaults(&mut args, &defaults))
     }
@@ -913,13 +884,9 @@ pub trait RpcApi: Sized {
     fn get_new_address(
         &self,
         label: Option<&str>,
-        address_type: Option<json::AddressType>,
+        _address_type: Option<json::AddressType>,
     ) -> Result<Address> {
-        let address: AddressUnchecked = if cfg!(feature = "dogecoin") {
-            self.call("getnewaddress", &opt_into_vec_json(label)?)?
-        } else {
-            self.call("getnewaddress", &[opt_into_json(label)?, opt_into_json(address_type)?])?
-        };
+        let address: AddressUnchecked = self.call("getnewaddress", &opt_into_vec_json(label)?)?;
         let address = address.require_network(self.network())?;
         Ok(address)
     }
