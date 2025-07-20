@@ -10,9 +10,12 @@
 
 //! A very simple example used as a self-test of this library against a Bitcoin
 //! Core node.
-extern crate bitcoincore_rpc;
+extern crate dogecoincore_rpc;
 
-use bitcoincore_rpc::{bitcoin, Auth, Client, Error, RpcApi};
+use dogecoincore_rpc::{
+    json::import::{Block, Network, Transaction},
+    Auth, Client, Error, RpcApi,
+};
 
 fn main_result() -> Result<(), Error> {
     let mut args = std::env::args();
@@ -23,7 +26,7 @@ fn main_result() -> Result<(), Error> {
     let user = args.next().expect("no user given");
     let pass = args.next().expect("no pass given");
 
-    let rpc = Client::new(&url, Auth::UserPass(user, pass)).unwrap();
+    let rpc = Client::new(Network::Regtest, &url, Auth::UserPass(user, pass)).unwrap();
 
     let _blockchain_info = rpc.get_blockchain_info()?;
 
@@ -35,10 +38,9 @@ fn main_result() -> Result<(), Error> {
     println!("best block hash by height: {}", best_block_hash_by_height);
     assert_eq!(best_block_hash_by_height, best_block_hash);
 
-    let bitcoin_block: bitcoin::Block = rpc.get_by_id(&best_block_hash)?;
+    let bitcoin_block: Block = rpc.get_by_id(&best_block_hash)?;
     println!("best block hash by `get`: {}", bitcoin_block.header.prev_blockhash);
-    let bitcoin_tx: bitcoin::Transaction =
-        rpc.get_by_id(&bitcoin_block.txdata[0].compute_txid())?;
+    let bitcoin_tx: Transaction = rpc.get_by_id(&bitcoin_block.txdata[0].compute_txid())?;
     println!("tx by `get`: {}", bitcoin_tx.compute_txid());
 
     Ok(())

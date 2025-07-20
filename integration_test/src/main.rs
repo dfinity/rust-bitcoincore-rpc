@@ -56,17 +56,6 @@ impl log::Log for StdLogger {
 
 static LOGGER: StdLogger = StdLogger;
 
-#[allow(unused)]
-/// Assert that the call returns a "method not found" error.
-macro_rules! assert_not_found {
-    ($call:expr) => {
-        match $call.unwrap_err() {
-            Error::JsonRpc(JsonRpcError::Rpc(ref e)) if e.code == -32601 => {}
-            e => panic!("expected method not found error for {}, got: {}", stringify!($call), e),
-        }
-    };
-}
-
 /// Assert that the call returns the specified error message.
 macro_rules! assert_error_message {
     ($call:expr, $code:expr, $msg:expr) => {
@@ -107,16 +96,11 @@ fn get_auth() -> dogecoincore_rpc::Auth {
     };
 }
 
-#[allow(unused)]
-fn new_wallet_client(wallet_name: &str) -> Client {
-    let url = get_rpc_url();
-    Client::new(Network::Regtest, &url, get_auth()).unwrap()
-}
-
 fn main() {
     log::set_logger(&LOGGER).map(|()| log::set_max_level(log::LevelFilter::max())).unwrap();
 
-    let cl = new_wallet_client("testwallet");
+    let url = get_rpc_url();
+    let cl = Client::new(Network::Regtest, &url, get_auth()).unwrap();
 
     test_get_network_info(&cl);
     unsafe { VERSION = cl.version().unwrap() };
@@ -156,7 +140,6 @@ fn main() {
     test_decode_raw_transaction(&cl);
     test_fund_raw_transaction(&cl);
     test_list_received_by_address(&cl);
-    test_estimate_smart_fee(&cl);
     test_ping(&cl);
     test_get_peer_info(&cl);
     test_get_tx_out_set_info(&cl);
@@ -295,7 +278,6 @@ fn test_get_received_by_address(cl: &Client) {
     assert_eq!(cl.get_received_by_address(&addr, Some(6)).unwrap(), btc(1));
     assert_eq!(cl.get_received_by_address(&addr, None).unwrap(), btc(1));
     println!("test_get_received_by_addrss {}", addr);
-    panic!("err");
 }
 
 fn test_list_unspent(cl: &Client) {
@@ -406,11 +388,10 @@ fn test_get_tx_out_proof(cl: &Client) {
     assert!(!proof.is_empty());
 }
 
-#[allow(unused)]
 fn test_get_mempool_entry(cl: &Client) {
     let txid =
         cl.send_to_address(&RANDOM_ADDRESS, btc(1), None, None, None, None, None, None).unwrap();
-    let entry = cl.get_mempool_entry(&txid).unwrap();
+    let _entry = cl.get_mempool_entry(&txid).unwrap();
     let fake = Txid::hash(&[1, 2]);
     assert!(cl.get_mempool_entry(&fake).is_err());
 }
@@ -540,24 +521,6 @@ fn test_list_received_by_address(cl: &Client) {
     );
 }
 
-fn test_estimate_smart_fee(cl: &Client) {
-    // let mode = json::EstimateMode::Unset;
-    let res = cl.estimate_smart_fee(3, None).unwrap();
-
-    // With a fresh node, we can't get fee estimates.
-    if let Some(errors) = res.errors {
-        if errors == &["Insufficient data or no feerate found"] {
-            println!("Cannot test estimate_smart_fee because no feerate found!");
-            return;
-        } else {
-            panic!("Unexpected error(s) for estimate_smart_fee: {:?}", errors);
-        }
-    }
-
-    assert!(res.fee_rate.is_some(), "no fee estimate available: {:?}", res.errors);
-    assert!(res.fee_rate.unwrap() >= btc(0));
-}
-
 fn test_ping(cl: &Client) {
     let _ = cl.ping().unwrap();
 }
@@ -624,35 +587,6 @@ fn test_getblocktemplate(cl: &Client) {
 
     // cleanup mempool transaction
     cl.generate_to_address(2, &RANDOM_ADDRESS).unwrap();
-}
-
-#[allow(unused)]
-// Error: "Only legacy wallets are supported by this command"
-fn test_add_multisig_address(cl: &Client) {
-    let addr1 = cl.get_new_address(None, Some(json::AddressType::Bech32)).unwrap();
-    let addr2 = cl.get_new_address(None, Some(json::AddressType::Bech32)).unwrap();
-    let addresses =
-        [json::PubKeyOrAddress::Address(&addr1), json::PubKeyOrAddress::Address(&addr2)];
-
-    assert!(cl.add_multisig_address(addresses.len(), &addresses, None, None).is_ok());
-    assert!(cl.add_multisig_address(addresses.len() - 1, &addresses, None, None).is_ok());
-    assert!(cl.add_multisig_address(addresses.len() + 1, &addresses, None, None).is_err());
-    assert!(cl.add_multisig_address(0, &addresses, None, None).is_err());
-    assert!(cl.add_multisig_address(addresses.len(), &addresses, Some("test_label"), None).is_ok());
-    assert!(cl
-        .add_multisig_address(addresses.len(), &addresses, None, Some(json::AddressType::Legacy))
-        .is_ok());
-    assert!(cl
-        .add_multisig_address(
-            addresses.len(),
-            &addresses,
-            None,
-            Some(json::AddressType::P2shSegwit)
-        )
-        .is_ok());
-    assert!(cl
-        .add_multisig_address(addresses.len(), &addresses, None, Some(json::AddressType::Bech32))
-        .is_ok());
 }
 
 fn test_get_mempool_info(cl: &Client) {

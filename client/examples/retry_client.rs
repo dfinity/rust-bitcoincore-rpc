@@ -8,12 +8,12 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-extern crate bitcoincore_rpc;
+extern crate dogecoincore_rpc;
 extern crate jsonrpc;
 extern crate serde;
 extern crate serde_json;
 
-use bitcoincore_rpc::{Client, Error, Result, RpcApi};
+use dogecoincore_rpc::{json::import::Network, Client, Error, Result, RpcApi};
 
 pub struct RetryClient {
     client: Client,
@@ -23,6 +23,10 @@ const INTERVAL: u64 = 1000;
 const RETRY_ATTEMPTS: u8 = 10;
 
 impl RpcApi for RetryClient {
+    fn network(&self) -> Network {
+        self.client.network()
+    }
+
     fn call<T: for<'a> serde::de::Deserialize<'a>>(
         &self,
         cmd: &str,
